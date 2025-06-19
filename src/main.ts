@@ -24,18 +24,11 @@ type Actress = Person & {
     | "Chinese";
 };
 
-//  Milestone 3
-// Crea una funzione getActress che, dato un id, effettua una chiamata a:
-
-// GET /actresses/:id
-// La funzione deve restituire l’oggetto Actress, se esiste, oppure null se non trovato.
-
-// Utilizza un type guard chiamato isActress per assicurarti che la struttura del dato ricevuto sia corretta.
-
 function isActress(dati: unknown): dati is Actress {
   if (
     dati &&
     typeof dati === "object" &&
+    dati !== null &&
     "id" in dati &&
     typeof dati.id === "number" &&
     "name" in dati &&
@@ -47,7 +40,9 @@ function isActress(dati: unknown): dati is Actress {
     "image" in dati &&
     typeof dati.image === "string" &&
     "most_famous_movies" in dati &&
-    Array.isArray(dati.most_famous_movies) &&
+    dati.most_famous_movies instanceof Array &&
+    dati.most_famous_movies.length === 3 &&
+    dati.most_famous_movies.every((movie) => typeof movie === "string") &&
     "awards" in dati &&
     typeof dati.awards === "string" &&
     "nationality" in dati &&
@@ -70,7 +65,26 @@ async function getActress(id: number): Promise<Actress | null> {
     }
     return dati;
   } catch (error) {
-    console.error(error);
+    if (error instanceof Error) console.error(error);
     return null;
+  }
+}
+
+async function getAllActresses(): Promise<Actress[]> {
+  try {
+    const response = await fetch("http://localhost:3333/actresses");
+    if (!response.ok) {
+      throw new Error(`Errore HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const dati: unknown = await response.json();
+    if (!(dati instanceof Array)) {
+      throw new Error("Formato dei dati non valido, non è un array");
+    }
+    const validActresses = dati.filter(isActress);
+    return validActresses;
+  } catch (error) {
+    if (error instanceof Error) console.error(error);
+    return [];
   }
 }
