@@ -88,3 +88,14 @@ async function getAllActresses(): Promise<Actress[]> {
     return [];
   }
 }
+
+async function getActresses(ids: number[]): Promise<(Actress | null)[]> {
+  try {
+    const promises = ids.map((id) => getActress(id));
+    const results = await Promise.all(promises);
+    return results;
+  } catch (error) {
+    if (error instanceof Error) console.error(error);
+    return [];
+  }
+}
